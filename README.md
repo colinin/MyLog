@@ -1,6 +1,8 @@
 # MyLog
 一些奇思妙想的东西，记录下来
 
+用户自定义回调函数线程池回调,事件函数则以当前线程调用
+
 ```C#
 private void InitHttpClient()
 {
