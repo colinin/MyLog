@@ -73,8 +73,8 @@
         /// <returns></returns>
         private Uri CreateRequestUri(string baseServerAddress, string baseServerMethod, IDictionary<string, string> baseServerParamters)
         {
-
             var requestUri = new StringBuilder();
+            var requestUriString = string.Empty;
             if (!baseServerAddress.EndsWith("/"))
             {
                 baseServerAddress += "/";
@@ -92,8 +92,12 @@
                         .Append("&");
                 }
             }
-            var requestUriString = requestUri.ToString();
-            return new Uri(requestUriString.Substring(0, requestUriString.Length - 1));
+            requestUriString = requestUri.ToString();
+            if(requestUriString.EndsWith("&"))
+            {
+                requestUriString = requestUriString.Substring(0, requestUriString.Length - 1);
+            }
+            return new Uri(requestUriString);
         }
         /// <summary>
         /// 创建一个HttpClient客户端
