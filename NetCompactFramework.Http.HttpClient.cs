@@ -64,12 +64,52 @@
             _httpClientData.WebRequest = httpWebRequest;
             _isRequested = false;
         }
+        /// <summary>
+        /// 根据给定的远程服务调用参数初始化Uri类的实例
+        /// </summary>
+        /// <param name="baseServerAddress">调用服务地址</param>
+        /// <param name="baseServerMethod">调用服务方法</param>
+        /// <param name="baseServerParamters">调用服务参数</param>
+        /// <returns></returns>
+        private Uri CreateRequestUri(string baseServerAddress, string baseServerMethod, IDictionary<string, string> baseServerParamters)
+        {
 
+            var requestUri = new StringBuilder();
+            if (!baseServerAddress.EndsWith("/"))
+            {
+                baseServerAddress += "/";
+            }
+            requestUri.Append(baseServerAddress).Append(baseServerMethod);
+            if (baseServerParamters.Count > 0)
+            {
+                requestUri.Append("?");
+                foreach (KeyValuePair<string, string> kvalues in baseServerParamters)
+                {
+                    requestUri
+                        .Append(kvalues.Key)
+                        .Append("=")
+                        .Append(kvalues.Value)
+                        .Append("&");
+                }
+            }
+            var requestUriString = requestUri.ToString();
+            return new Uri(requestUriString.Substring(0, requestUriString.Length - 1));
+        }
+        /// <summary>
+        /// 创建一个HttpClient客户端
+        /// </summary>
+        /// <param name="options">连接配置信息</param>
+        /// <returns></returns>
         public static HttpClient Create(Action<HttpClientOption> options)
         {
             var option = new HttpClientOption();
             options.Invoke(option);
-            HttpWebRequest httpWebRequest = (HttpWebRequest)HttpWebRequest.Create(option.BaseServerUrl);
+            if (!option.BaseServerUrl.EndsWith("/"))
+            {
+                option.BaseServerUrl += "/";
+            }
+            var uri = new Uri(option.BaseServerUrl + option.RemoteMethod);
+            HttpWebRequest httpWebRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
             var client = new HttpClient(httpWebRequest);
             client.SetWebHttpRequest(httpWebRequest, option);
             return client;
@@ -79,13 +119,23 @@
         /// 修改请求信息
         /// </summary>
         /// <param name="requestData"></param>
-        public HttpClient ModifyHttpClient(Action<HttpClientOption> options)
+        public HttpClient UseHttpClient(Action<HttpClientOption> options)
         {
             var option = new HttpClientOption();
             options.Invoke(option);
-            if (!string.IsNullOrEmpty(option.BaseServerUrl))
+            if (!string.IsNullOrEmpty(option.RemoteMethod))
             {
-                _httpClientData.WebRequest = (HttpWebRequest)HttpWebRequest.Create(option.BaseServerUrl);
+                Uri uri;
+                if (!string.IsNullOrEmpty(option.BaseServerUrl))
+                {
+                    uri = CreateRequestUri(option.BaseServerUrl, option.RemoteMethod, option.RemoteParamters);
+                }
+                else
+                {
+                    var path = _httpClientData.WebRequest.RequestUri.AbsoluteUri.Substring(0, _httpClientData.WebRequest.RequestUri.AbsoluteUri.LastIndexOf('/') + 1);
+                    uri = CreateRequestUri(path, option.RemoteMethod, option.RemoteParamters);
+                }
+                _httpClientData.WebRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
             }
             SetWebHttpRequest(_httpClientData.WebRequest, option);
             return this;
@@ -109,10 +159,11 @@
         public void SetWebHttpRequest(HttpWebRequest httpWebRequest, HttpClientOption option)
         {
             httpWebRequest.Headers.Clear();
-            httpWebRequest.Method = option.RequestMethod;
-            httpWebRequest.Timeout = option.Timeout;
-            httpWebRequest.ContentType = option.ContentType;
+            httpWebRequest.Method = option.RequestMethod ?? httpWebRequest.Method;
+            httpWebRequest.Timeout = option.Timeout > 1000 ? option.Timeout : httpWebRequest.Timeout;
+            httpWebRequest.ContentType = option.ContentType ?? httpWebRequest.ContentType;
             httpWebRequest.KeepAlive = option.KeepAlive;
+            httpWebRequest.UserAgent = "Mozilla/4.0 (compatible; MSIE 5.0; Windows CE Compact Framework)";
             if (httpWebRequest.ServicePoint != null)
             {
                 httpWebRequest.ServicePoint.Expect100Continue = false;
@@ -289,6 +340,14 @@
         /// </summary>
         public string BaseServerUrl { get; set; }
         /// <summary>
+        /// 远程服务调用方法
+        /// </summary>
+        public string RemoteMethod { get; set; }
+        /// <summary>
+        /// 远程服务调用参数列表
+        /// </summary>
+        public IDictionary<string, string> RemoteParamters { get; set; }
+        /// <summary>
         /// 请求服务方式
         /// </summary>
         public string RequestMethod { get; set; }
@@ -312,6 +371,8 @@
         {
             Timeout = 10000;
             RequestMethod = "POST";
+            RemoteMethod = "Index";
+            RemoteParamters = new Dictionary<string, string>();
             ContentType = "application/json";
             Proxy = null;
             KeepAlive = false;
