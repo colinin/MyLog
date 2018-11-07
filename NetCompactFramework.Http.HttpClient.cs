@@ -71,7 +71,7 @@
         /// <param name="baseServerMethod">调用服务方法</param>
         /// <param name="baseServerParamters">调用服务参数</param>
         /// <returns></returns>
-        private Uri CreateRequestUri(string baseServerAddress, string baseServerMethod, IDictionary<string, string> baseServerParamters)
+        public static CreateRequestUri(string baseServerAddress, string baseServerMethod, IDictionary<string, string> baseServerParamters)
         {
             var requestUri = new StringBuilder();
             var requestUriString = string.Empty;
@@ -108,11 +108,7 @@
         {
             var option = new HttpClientOption();
             options.Invoke(option);
-            if (!option.BaseServerUrl.EndsWith("/"))
-            {
-                option.BaseServerUrl += "/";
-            }
-            var uri = new Uri(option.BaseServerUrl + option.RemoteMethod);
+            var uri = HttpClient.CreateRequestUri(option.BaseServerUrl, option.RemoteMethod, option.RemoteParamters);
             HttpWebRequest httpWebRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
             var client = new HttpClient(httpWebRequest);
             client.SetWebHttpRequest(httpWebRequest, option);
@@ -132,12 +128,12 @@
                 Uri uri;
                 if (!string.IsNullOrEmpty(option.BaseServerUrl))
                 {
-                    uri = CreateRequestUri(option.BaseServerUrl, option.RemoteMethod, option.RemoteParamters);
+                    uri = ttpClient.CreateRequestUri(option.BaseServerUrl, option.RemoteMethod, option.RemoteParamters);
                 }
                 else
                 {
                     var path = _httpClientData.WebRequest.RequestUri.AbsoluteUri.Substring(0, _httpClientData.WebRequest.RequestUri.AbsoluteUri.LastIndexOf('/') + 1);
-                    uri = CreateRequestUri(path, option.RemoteMethod, option.RemoteParamters);
+                    uri = ttpClient.CreateRequestUri(path, option.RemoteMethod, option.RemoteParamters);
                 }
                 _httpClientData.WebRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
             }
