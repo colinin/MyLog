@@ -1,6 +1,7 @@
 # MyLog
 一些奇思妙想的东西，记录下来
 
+```C#
 private void InitHttpClient()
 {
     var feedback = new FeedbackDto();
@@ -80,3 +81,4 @@ private void TestSendPatchHttpMessage()
             })
             .SendMessage(null, (response) => Console.WriteLine(response.ToString()));
 }
+```
