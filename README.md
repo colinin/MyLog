@@ -1,6 +1,8 @@
 # MyLog
 一些奇思妙想的东西，记录下来
 
+这是一个用于.NET Compact Framework的HttpClient组件，主要和后台Web服务通讯
+
 用户自定义回调函数线程池回调,事件函数则以当前线程调用
 
 ```C#
