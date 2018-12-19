@@ -59,7 +59,8 @@ namespace Scanner.Device
             try
             {
                 Scanner.Instance().OnScanedEvent += new Action<Scanner.CodeInfo>(SeuicPDA_A8_DataArrivedEvent);
-                _isReady = Scanner.Enable();
+                Scanner.Enable();
+                _isReady = true;
                 return _isReady;
             }
             catch (Exception ex)
