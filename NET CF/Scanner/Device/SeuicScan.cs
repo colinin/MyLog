@@ -23,24 +23,13 @@ namespace Scanner.Device
         {
             try
             {
-                if (SeuicPDA_A8.Init())
+                IntPtr hwndBarcode = Win32API.FindWindowA(null, "2dscan");
+                if (hwndBarcode != IntPtr.Zero)
                 {
-                    SeuicPDA_A8.BeeperEnable(false);
-                    SeuicPDA_A8.ScannerContinue(false);
-                    if (SeuicPDA_A8._Open())
-                    {
-                        SeuicPDA_A8.DataArrivedEvent += new SeuicPDA_A8.DataArrivedEventHandler(SeuicPDA_A8_DataArrivedEvent);
-                        _isReady = true;
-                    }
-                    else
-                    {
-                        _isReady = false;
-                    }
+                    /// 关闭东大系统自带扫描器程序
+                    Win32API.SendMessage(hwndBarcode, 0x0002, 0, 0);
                 }
-                else
-                {
-                    _isReady = false;
-                }
+                _isReady = true;
                 return _isReady;
             }
             catch (Exception ex)
@@ -50,11 +39,14 @@ namespace Scanner.Device
             return false;
         }
 
-        private void SeuicPDA_A8_DataArrivedEvent(string e)
+        private void SeuicPDA_A8_DataArrivedEvent(Scanner.CodeInfo codeInfo)
         {
             try
             {
-                OnBarCodeChanegd(null, new DataArrivedArgs(e));
+                Debug.Write("Scanner barcode:"  + codeInfo.barcode);
+                Debug.Write("Length:" + codeInfo.len.ToString());
+                Debug.WriteLine(",Type:" + codeInfo.codetype);
+                OnBarCodeChanegd(null, new DataArrivedArgs(codeInfo.barcode.Trim()));
             }
             catch (Exception ex)
             {
@@ -66,11 +58,8 @@ namespace Scanner.Device
         {
             try
             {
-                if (_isReady)
-                {
-                    _isReady = SeuicPDA_A8.ScannerEnable(true);
-                }
-                return _isReady;
+                Scanner.Instance().OnScanedEvent += new Action<Scanner.CodeInfo>(SeuicPDA_A8_DataArrivedEvent);
+                return Scanner.Enable();
             }
             catch (Exception ex)
             {
@@ -83,9 +72,8 @@ namespace Scanner.Device
         {
             try
             {
-                SeuicPDA_A8.DataArrivedEvent -= new SeuicPDA_A8.DataArrivedEventHandler(SeuicPDA_A8_DataArrivedEvent);
-                SeuicPDA_A8._Close();
-                return true;
+                Scanner.Instance().OnScanedEvent -= new Action<Scanner.CodeInfo>(SeuicPDA_A8_DataArrivedEvent);
+                return Scanner.Disable();
             }
             catch (Exception ex)
             {
