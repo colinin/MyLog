@@ -1,4 +1,3 @@
-````C#
 namespace Runtime.Command
 {
     /// <summary>
