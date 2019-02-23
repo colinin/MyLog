@@ -1,5 +1,3 @@
-````C#
-
 using System;
 namespace Runtime.Command
 {
